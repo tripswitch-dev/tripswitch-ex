@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Elixir/OTP versions in CI — batch together, require manual merge",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["erlef/setup-beam"],
+      "groupName": "Elixir/OTP versions",
+      "automerge": false
+    },
+    {
+      "description": "Hex dependencies — patch updates automerge if CI passes",
+      "matchManagers": ["mix"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true
+    },
+    {
+      "description": "Hex dependencies — minor/major require review",
+      "matchManagers": ["mix"],
+      "matchUpdateTypes": ["minor", "major"],
+      "automerge": false
+    },
+    {
+      "description": "GitHub Actions — patch/minor automerge",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["actions/checkout", "actions/cache"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    }
+  ]
+}
