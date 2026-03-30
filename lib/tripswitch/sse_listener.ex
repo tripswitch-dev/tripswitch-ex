@@ -101,10 +101,8 @@ defmodule Tripswitch.SSEListener do
            Mint.HTTP.connect(scheme, uri.host, port,
              protocols: [:http1],
              transport_opts: transport_opts
-           ),
-         {:ok, conn, request_ref} <-
-           Mint.HTTP.request(conn, "GET", path, sse_headers(config), nil) do
-      {:ok, conn, request_ref}
+           ) do
+      Mint.HTTP.request(conn, "GET", path, sse_headers(config), nil)
     end
   end
 
@@ -150,25 +148,25 @@ defmodule Tripswitch.SSEListener do
     buffer = state.buffer <> data
     {events, remaining} = parse_events(buffer)
 
-    Enum.each(events, fn event_json ->
-      case Jason.decode(event_json) do
-        {:ok, %{"breaker" => name, "state" => new_state} = event} ->
-          allow_rate = Map.get(event, "allow_rate")
-
-          if new_state == "half_open" && is_nil(allow_rate) do
-            Logger.warning(
-              "[Tripswitch] SSE half_open event missing allow_rate for breaker #{name}"
-            )
-          end
-
-          StateServer.update_breaker(state.config.name, name, new_state, allow_rate)
-
-        {:error, reason} ->
-          Logger.error("[Tripswitch] Failed to parse SSE event: #{inspect(reason)}")
-      end
-    end)
+    Enum.each(events, &handle_event(&1, state.config.name))
 
     %{state | buffer: remaining}
+  end
+
+  defp handle_event(event_json, client_name) do
+    case Jason.decode(event_json) do
+      {:ok, %{"breaker" => name, "state" => new_state} = event} ->
+        allow_rate = Map.get(event, "allow_rate")
+
+        if new_state == "half_open" && is_nil(allow_rate) do
+          Logger.warning("[Tripswitch] SSE half_open event missing allow_rate for #{name}")
+        end
+
+        StateServer.update_breaker(client_name, name, new_state, allow_rate)
+
+      {:error, reason} ->
+        Logger.error("[Tripswitch] Failed to parse SSE event: #{inspect(reason)}")
+    end
   end
 
   # SSE events are separated by blank lines (\n\n).

@@ -58,9 +58,8 @@ defmodule Tripswitch.MetadataCache do
   # ---------------------------------------------------------------------------
 
   defp do_sync(config) do
-    with :ok <- fetch_and_update(config, "breakers", :breakers),
-         :ok <- fetch_and_update(config, "routers", :routers) do
-      :ok
+    with :ok <- fetch_and_update(config, "breakers", :breakers) do
+      fetch_and_update(config, "routers", :routers)
     end
   end
 

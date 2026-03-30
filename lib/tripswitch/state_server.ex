@@ -100,7 +100,12 @@ defmodule Tripswitch.StateServer do
     end
 
     {:noreply,
-     %{state | breaker_states: new_states, sse_connected: true, last_sse_event: DateTime.utc_now()}}
+     %{
+       state
+       | breaker_states: new_states,
+         sse_connected: true,
+         last_sse_event: DateTime.utc_now()
+     }}
   end
 
   def handle_cast({:set_sse_connected, connected?}, state) do
@@ -177,13 +182,7 @@ defmodule Tripswitch.StateServer do
             {:halt, :open}
 
           %{state: "half_open", allow_rate: rate} ->
-            new_min =
-              case min_allow_rate do
-                :closed -> {:half_open, rate}
-                {:half_open, current} -> {:half_open, min(current, rate)}
-              end
-
-            {:cont, new_min}
+            {:cont, merge_allow_rate(min_allow_rate, rate)}
 
           %{state: "closed"} ->
             {:cont, min_allow_rate}
@@ -192,4 +191,7 @@ defmodule Tripswitch.StateServer do
 
     {:reply, result, state}
   end
+
+  defp merge_allow_rate(:closed, rate), do: {:half_open, rate}
+  defp merge_allow_rate({:half_open, current}, rate), do: {:half_open, min(current, rate)}
 end
