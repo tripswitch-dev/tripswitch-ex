@@ -36,8 +36,9 @@ defmodule Tripswitch.MixProject do
       {:req, "~> 0.5"},
       {:jason, "~> 1.4"},
       {:mint, "~> 1.6"},
-      # Dev / docs
+      # Dev / docs / lint
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       # Test
       {:excoveralls, "~> 0.18", only: :test},
       {:mox, "~> 1.1", only: :test}

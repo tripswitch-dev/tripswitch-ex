@@ -8,6 +8,9 @@ defmodule Tripswitch.Application do
       {Registry, keys: :unique, name: Tripswitch.Registry}
     ]
 
-    Supervisor.start_link(children, strategy: :one_for_one, name: Tripswitch.ApplicationSupervisor)
+    Supervisor.start_link(children,
+      strategy: :one_for_one,
+      name: Tripswitch.ApplicationSupervisor
+    )
   end
 end

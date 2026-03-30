@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+env:
+  MIX_ENV: test
+
+jobs:
+  test:
+    name: test (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Minimum supported
+          - elixir: "1.17.3"
+            otp: "26.2"
+          # Current stable
+          - elixir: "1.18.3"
+            otp: "27.1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      - name: Restore deps cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Check formatting
+        run: mix format --check-formatted
+
+      - name: Compile (warnings as errors)
+        run: mix compile --warnings-as-errors
+
+      - name: Lint (Credo strict)
+        run: mix credo --strict
+
+      - name: Run tests
+        run: mix test
+
+  integration:
+    name: integration tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    env:
+      TRIPSWITCH_API_KEY: ${{ secrets.TRIPSWITCH_API_KEY }}
+      TRIPSWITCH_PROJECT_ID: ${{ secrets.TRIPSWITCH_PROJECT_ID }}
+      TRIPSWITCH_INGEST_SECRET: ${{ secrets.TRIPSWITCH_INGEST_SECRET }}
+      TRIPSWITCH_BREAKER_NAME: ${{ secrets.TRIPSWITCH_BREAKER_NAME }}
+      TRIPSWITCH_BREAKER_ROUTER_ID: ${{ secrets.TRIPSWITCH_BREAKER_ROUTER_ID }}
+      TRIPSWITCH_BREAKER_METRIC: ${{ secrets.TRIPSWITCH_BREAKER_METRIC }}
+      TRIPSWITCH_ADMIN_KEY: ${{ secrets.TRIPSWITCH_ADMIN_KEY }}
+      TRIPSWITCH_WORKSPACE_ID: ${{ secrets.TRIPSWITCH_WORKSPACE_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.18.3"
+          otp-version: "27.1"
+
+      - name: Restore deps cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: deps-${{ runner.os }}-27.1-1.18.3-${{ hashFiles('mix.lock') }}
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Run integration tests
+        run: mix test --only integration
