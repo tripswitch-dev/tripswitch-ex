@@ -18,11 +18,11 @@ jobs:
       matrix:
         include:
           # Minimum supported
-          - elixir: "1.17.3"
-            otp: "26.2"
+          - elixir: "~> 1.17"
+            otp: "~> 26.2"
           # Current stable
-          - elixir: "1.18.3"
-            otp: "27.1"
+          - elixir: "~> 1.18"
+            otp: "~> 27.1"
 
     steps:
       - uses: actions/checkout@v4
@@ -79,8 +79,8 @@ jobs:
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: "1.18.3"
-          otp-version: "27.1"
+          elixir-version: "~> 1.18"
+          otp-version: "~> 27.1"
 
       - name: Restore deps cache
         uses: actions/cache@v4
@@ -88,7 +88,7 @@ jobs:
           path: |
             deps
             _build
-          key: deps-${{ runner.os }}-27.1-1.18.3-${{ hashFiles('mix.lock') }}
+          key: deps-${{ runner.os }}-27-1.18-${{ hashFiles('mix.lock') }}
 
       - name: Install dependencies
         run: mix deps.get
