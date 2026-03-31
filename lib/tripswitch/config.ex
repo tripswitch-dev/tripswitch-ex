@@ -38,5 +38,5 @@ defmodule Tripswitch.Config do
     do: "#{base}/v1/projects/#{pid}/ingest"
 
   def metadata_url(%__MODULE__{base_url: base, project_id: pid}, resource),
-    do: "#{base}/v1/projects/#{pid}/#{resource}"
+    do: "#{base}/v1/projects/#{pid}/#{resource}/metadata"
 end

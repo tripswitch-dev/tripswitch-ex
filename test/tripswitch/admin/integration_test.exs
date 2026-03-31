@@ -64,7 +64,9 @@ defmodule Tripswitch.Admin.IntegrationTest do
   end
 
   test "unknown project returns not_found error", %{client: client} do
-    assert {:error, error} = Tripswitch.Admin.get_project(client, "proj_does_not_exist")
+    assert {:error, error} =
+             Tripswitch.Admin.get_project(client, "00000000-0000-0000-0000-000000000000")
+
     assert Error.not_found?(error)
   end
 

@@ -123,6 +123,28 @@ defmodule Tripswitch do
   end
 
   @doc """
+  Returns cached breaker metadata fetched by the background sync process.
+
+  Each entry is a map with `:id`, `:name`, and `:metadata` keys.
+  Returns an empty list until the first metadata sync completes.
+  """
+  @spec get_breakers_metadata(atom()) :: list(map())
+  def get_breakers_metadata(client) do
+    StateServer.get_breakers_meta(client)
+  end
+
+  @doc """
+  Returns cached router metadata fetched by the background sync process.
+
+  Each entry is a map with `:id`, `:name`, and `:metadata` keys.
+  Returns an empty list until the first metadata sync completes.
+  """
+  @spec get_routers_metadata(atom()) :: list(map())
+  def get_routers_metadata(client) do
+    StateServer.get_routers_meta(client)
+  end
+
+  @doc """
   Returns `true` if the named breaker is currently open, `false` otherwise.
 
   A half-open breaker returns `false` — use `execute/3` for probabilistic
