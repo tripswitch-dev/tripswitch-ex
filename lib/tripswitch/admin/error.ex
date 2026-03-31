@@ -23,32 +23,32 @@ defmodule Tripswitch.Admin.Error do
         }
 
   @doc "Returns `true` for 404 responses."
-  @spec not_found?(t()) :: boolean()
+  @spec not_found?(t() | term()) :: boolean()
   def not_found?(%__MODULE__{status: 404}), do: true
-  def not_found?(%__MODULE__{}), do: false
+  def not_found?(_), do: false
 
   @doc "Returns `true` for 401 responses."
-  @spec unauthorized?(t()) :: boolean()
+  @spec unauthorized?(t() | term()) :: boolean()
   def unauthorized?(%__MODULE__{status: 401}), do: true
-  def unauthorized?(%__MODULE__{}), do: false
+  def unauthorized?(_), do: false
 
   @doc "Returns `true` for 403 responses."
-  @spec forbidden?(t()) :: boolean()
+  @spec forbidden?(t() | term()) :: boolean()
   def forbidden?(%__MODULE__{status: 403}), do: true
-  def forbidden?(%__MODULE__{}), do: false
+  def forbidden?(_), do: false
 
   @doc "Returns `true` for 422 responses."
-  @spec unprocessable?(t()) :: boolean()
+  @spec unprocessable?(t() | term()) :: boolean()
   def unprocessable?(%__MODULE__{status: 422}), do: true
-  def unprocessable?(%__MODULE__{}), do: false
+  def unprocessable?(_), do: false
 
   @doc "Returns `true` for 429 responses."
-  @spec rate_limited?(t()) :: boolean()
+  @spec rate_limited?(t() | term()) :: boolean()
   def rate_limited?(%__MODULE__{status: 429}), do: true
-  def rate_limited?(%__MODULE__{}), do: false
+  def rate_limited?(_), do: false
 
   @doc "Returns `true` for 5xx responses."
-  @spec server_error?(t()) :: boolean()
+  @spec server_error?(t() | term()) :: boolean()
   def server_error?(%__MODULE__{status: s}) when s in 500..599, do: true
-  def server_error?(%__MODULE__{}), do: false
+  def server_error?(_), do: false
 end
