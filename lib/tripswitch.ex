@@ -4,21 +4,48 @@ defmodule Tripswitch do
 
   ## Quick start
 
-      {:ok, _pid} =
-        Tripswitch.Client.start_link(
-          project_id: "proj_...",
-          api_key: "eb_pk_...",
-          ingest_secret: "...",
-          name: MyApp.Tripswitch
-        )
+  Start the client under your application's supervision tree:
+
+      defmodule MyApp.Application do
+        use Application
+
+        def start(_type, _args) do
+          children = [
+            {Tripswitch.Client,
+             project_id: System.fetch_env!("TRIPSWITCH_PROJECT_ID"),
+             api_key: System.fetch_env!("TRIPSWITCH_API_KEY"),
+             ingest_secret: System.fetch_env!("TRIPSWITCH_INGEST_SECRET"),
+             name: MyApp.Tripswitch,
+             on_state_change: &MyApp.Breakers.on_change/3}
+          ]
+
+          Supervisor.start_link(children, strategy: :one_for_one)
+        end
+      end
+
+  Then wrap operations with `execute/3`:
 
       result =
-        Tripswitch.execute(MyApp.Tripswitch, fn -> call_downstream() end,
+        Tripswitch.execute(MyApp.Tripswitch, fn -> call_payment_api() end,
           breakers: ["payment-service"],
-          router: "router-id",
+          router: "checkout-router",
           metrics: %{"latency_ms" => :latency},
           tags: %{"region" => "us-east-1"}
         )
+
+      case result do
+        {:error, :breaker_open} ->
+          # Circuit is open — return a cached or degraded response
+          {:ok, cached_response()}
+
+        {:error, reason} ->
+          # The task itself returned an error
+          {:error, reason}
+
+        response ->
+          # Task succeeded
+          {:ok, response}
+      end
 
   ## Options for `execute/3`
 
