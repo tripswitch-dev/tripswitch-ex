@@ -20,22 +20,18 @@ defmodule Tripswitch.Integration.RuntimeTest do
     {:ok, _} = start_supervised({Tripswitch.Client, opts})
 
     # Wait until the initial SSE state snapshot has been fully processed
-    wait_until!(fn -> Tripswitch.stats(__MODULE__.Client).cached_breakers > 0 end,
+    wait_until!(
+      fn -> Tripswitch.stats(__MODULE__.Client).cached_breakers > 0 end,
       timeout: 5_000,
-      interval: 50
+      interval: 50,
+      message:
+        "SSE failed to deliver initial state snapshot within 5000ms — check api_key and base_url"
     )
 
     {:ok,
      breaker_name: System.fetch_env!("TRIPSWITCH_BREAKER_NAME"),
      router_id: System.fetch_env!("TRIPSWITCH_BREAKER_ROUTER_ID"),
      metric: System.fetch_env!("TRIPSWITCH_BREAKER_METRIC")}
-  end
-
-  test "SSE is connected and delivered initial state snapshot" do
-    stats = Tripswitch.stats(__MODULE__.Client)
-    assert stats.sse_connected == true
-    assert stats.sse_reconnects == 0
-    assert stats.cached_breakers > 0, "expected SSE initial snapshot to populate breaker states"
   end
 
   test "get_state returns known breaker state", %{breaker_name: breaker_name} do
@@ -47,7 +43,7 @@ defmodule Tripswitch.Integration.RuntimeTest do
 
   test "get_all_states returns non-empty map" do
     all = Tripswitch.get_all_states(__MODULE__.Client)
-    assert map_size(all) > 0, "expected SSE snapshot to have populated at least one breaker"
+    assert map_size(all) > 0
   end
 
   test "stats reports sse_connected true" do
@@ -58,21 +54,22 @@ defmodule Tripswitch.Integration.RuntimeTest do
   end
 
   test "metadata sync populates breakers and routers" do
+    wait_until!(
+      fn -> Tripswitch.get_breakers_metadata(__MODULE__.Client) != [] end,
+      timeout: 5_000,
+      interval: 50,
+      message: "metadata sync failed to fetch breakers within 5000ms"
+    )
+
     breakers = Tripswitch.get_breakers_metadata(__MODULE__.Client)
     routers = Tripswitch.get_routers_metadata(__MODULE__.Client)
 
-    assert is_list(breakers)
+    [b | _] = breakers
+    assert is_binary(b.id)
+    assert is_binary(b.name)
+    assert is_map(b.metadata)
+
     assert is_list(routers)
-
-    assert breakers != [] or routers != [],
-           "expected metadata sync to have fetched at least one breaker or router"
-
-    if breakers != [] do
-      [b | _] = breakers
-      assert is_binary(b.id)
-      assert is_binary(b.name)
-      assert is_map(b.metadata)
-    end
   end
 
   test "execute runs and reports a sample", %{
@@ -111,22 +108,21 @@ defmodule Tripswitch.Integration.RuntimeTest do
   defp wait_until!(fun, opts) do
     interval = Keyword.get(opts, :interval, 50)
     timeout = Keyword.get(opts, :timeout, 5_000)
+    message = Keyword.get(opts, :message, "condition not met within #{timeout}ms")
     deadline = System.monotonic_time(:millisecond) + timeout
-    do_wait_until!(fun, deadline, interval, timeout)
+    do_wait_until!(fun, deadline, interval, message)
   end
 
-  defp do_wait_until!(fun, deadline, interval, original_timeout) do
+  defp do_wait_until!(fun, deadline, interval, message) do
     if fun.() do
       :ok
     else
       if System.monotonic_time(:millisecond) >= deadline do
-        flunk(
-          "SSE failed to deliver initial state snapshot within #{original_timeout}ms — check api_key and base_url"
-        )
+        flunk(message)
       end
 
       Process.sleep(interval)
-      do_wait_until!(fun, deadline, interval, original_timeout)
+      do_wait_until!(fun, deadline, interval, message)
     end
   end
 end
