@@ -59,7 +59,7 @@ defmodule Tripswitch.MixProject do
     [
       main: "Tripswitch",
       source_url: @source_url,
-      extras: ["README.md"]
+      extras: ["README.md", "LICENSE"]
     ]
   end
 end
