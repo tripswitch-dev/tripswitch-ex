@@ -23,7 +23,7 @@ Add `:tripswitch_ex` to your dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:tripswitch_ex, "~> 0.1"}
+    {:tripswitch_ex, "~> 0.2"}
   ]
 end
 ```
@@ -233,6 +233,25 @@ Tripswitch.execute(client, fn -> task() end,
   metrics: %{"latency_ms" => :latency}
 )
 ```
+
+**Constraints:**
+- `:breakers` and `:breaker_selector` are mutually exclusive — using both raises `ArgumentError`
+- `:router` and `:router_selector` are mutually exclusive — using both raises `ArgumentError`
+- If the metadata cache hasn't been populated yet, `execute/3` returns `{:error, :metadata_unavailable}`
+- If a selector returns an empty list or `nil`, no gating or sample emission occurs
+
+## Trace IDs
+
+Pass `:trace_id` on any `execute/3` call to associate the sample with a distributed trace:
+
+```elixir
+Tripswitch.execute(client, fn -> downstream_call() end,
+  router: "my-router",
+  trace_id: MyApp.Tracer.current_trace_id()
+)
+```
+
+The trace ID is a plain string — use whatever format your tracing system produces (e.g., OpenTelemetry W3C trace IDs, Datadog `x-datadog-trace-id`, etc.).
 
 ## Other runtime functions
 
