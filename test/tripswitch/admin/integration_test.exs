@@ -104,10 +104,7 @@ defmodule Tripswitch.Admin.IntegrationTest do
       assert Enum.any?(projects, &(&1["project_id"] == project_id))
 
       # Delete
-      assert :ok =
-               Tripswitch.Admin.delete_project(client, project_id,
-                 confirm_name: project_name
-               )
+      assert :ok = Tripswitch.Admin.delete_project(client, project_id, confirm_name: project_name)
 
       # Verify deletion
       assert {:error, error} = Tripswitch.Admin.get_project(client, project_id)
