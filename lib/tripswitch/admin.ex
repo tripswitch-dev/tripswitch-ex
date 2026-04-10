@@ -547,11 +547,11 @@ defmodule Tripswitch.Admin do
      }}
   end
 
-  # Merges router_id from wrapper envelope into the breaker map
+  # Merges router_ids from wrapper envelope into the breaker map
   defp flatten_breaker(%{"breaker" => breaker} = body) do
-    case body["router_id"] do
+    case body["router_ids"] do
       nil -> breaker
-      router_id -> Map.put(breaker, "router_id", router_id)
+      router_ids -> Map.put(breaker, "router_ids", router_ids)
     end
   end
 
