@@ -32,7 +32,7 @@ jobs:
           key: deps-${{ runner.os }}-27-1.18-${{ hashFiles('mix.lock') }}
 
       - name: Install dependencies
-        run: mix deps.get
+        run: mix deps.get --all-envs
 
       - name: Verify version matches tag
         run: |
