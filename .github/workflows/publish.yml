@@ -12,6 +12,8 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -34,7 +36,7 @@ jobs:
 
       - name: Verify version matches tag
         run: |
-          MIX_VERSION=$(mix run --no-start -e 'IO.puts(Mix.Project.config()[:version])')
+          MIX_VERSION=$(mix run --no-start -e 'IO.puts(Mix.Project.config()[:version])' | tail -1)
           TAG_VERSION="${GITHUB_REF_NAME#v}"
           if [ "$MIX_VERSION" != "$TAG_VERSION" ]; then
             echo "mix.exs version ($MIX_VERSION) does not match tag ($TAG_VERSION)"
