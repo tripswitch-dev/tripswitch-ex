@@ -332,7 +332,7 @@ defmodule Tripswitch.Admin do
   - `:limit` — maximum number of results
   """
   @spec list_notification_channels(t(), String.t(), keyword()) ::
-          {:ok, %{items: list(map()), next_cursor: String.t() | nil}}
+          {:ok, %{channels: list(map()), next_cursor: String.t() | nil}}
           | {:error, Error.t() | term()}
   def list_notification_channels(client, project_id, opts \\ []) do
     params = build_list_params(opts)
@@ -341,7 +341,7 @@ defmodule Tripswitch.Admin do
            request(client, :get, "/v1/projects/#{project_id}/notification-channels",
              params: params
            ) do
-      {:ok, %{items: Map.get(body, "items", []), next_cursor: body["next_cursor"]}}
+      {:ok, %{channels: Map.get(body, "channels", []), next_cursor: body["next_cursor"]}}
     end
   end
 
@@ -547,11 +547,11 @@ defmodule Tripswitch.Admin do
      }}
   end
 
-  # Merges router_id from wrapper envelope into the breaker map
+  # Merges router_ids from wrapper envelope into the breaker map
   defp flatten_breaker(%{"breaker" => breaker} = body) do
-    case body["router_id"] do
+    case body["router_ids"] do
       nil -> breaker
-      router_id -> Map.put(breaker, "router_id", router_id)
+      router_ids -> Map.put(breaker, "router_ids", router_ids)
     end
   end
 
