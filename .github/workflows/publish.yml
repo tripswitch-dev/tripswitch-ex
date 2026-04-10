@@ -32,7 +32,7 @@ jobs:
           key: deps-${{ runner.os }}-27-1.18-${{ hashFiles('mix.lock') }}
 
       - name: Install dependencies
-        run: mix deps.get --all-envs
+        run: MIX_ENV=dev mix deps.get
 
       - name: Verify version matches tag
         run: |
@@ -52,6 +52,7 @@ jobs:
         run: mix hex.publish --yes
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+          MIX_ENV: dev
 
       - name: Create GitHub Release
         run: gh release create "${{ github.ref_name }}" --generate-notes
