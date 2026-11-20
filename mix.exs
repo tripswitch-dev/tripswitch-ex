@@ -33,7 +33,7 @@ defmodule Tripswitch.MixProject do
 
   defp deps do
     [
-      {:req, "~> 0.5"},
+      {:req, "~> 0.7"},
       {:jason, "~> 1.4"},
       {:mint, "~> 1.6"},
       # Dev / docs / lint
